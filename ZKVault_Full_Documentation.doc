@@ -1,0 +1,174 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset="utf-8">
+<title>ZKVault Technical Documentation</title>
+<style>
+  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; line-height: 1.6; color: #222; margin: 40px; }
+  h1 { color: #1F3864; font-size: 28pt; text-align: center; border-bottom: 2px solid #1F3864; padding-bottom: 10px; }
+  h2 { color: #2F5496; font-size: 20pt; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 40px; page-break-after: avoid; }
+  h3 { color: #4472C4; font-size: 16pt; margin-top: 25px; page-break-after: avoid; }
+  p { margin: 10px 0; font-size: 11.5pt; text-align: justify; }
+  ul, ol { margin: 10px 0 10px 20px; font-size: 11.5pt; }
+  li { margin-bottom: 6px; }
+  .code-block { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 12px; font-family: 'Consolas', 'Courier New', monospace; font-size: 10pt; white-space: pre-wrap; margin: 15px 0; }
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+  <h1>ZK Vault: Comprehensive Technical &amp; Codebase Documentation</h1>
+  <p>This document provides a highly detailed, module-by-module, and line-by-line explanation of the entire architecture, technologies, and codebase used in the Zero-Knowledge Password Vault (ZKVault).</p>
+
+  <br><br>
+  <h2>Table of Contents</h2>
+  <ol>
+    <li>Authentication &amp; JWT (JSON Web Tokens)</li>
+    <li>Zero-Knowledge Cryptography (The Core Engine)</li>
+    <li>Backend Architecture (Node.js, Express, MongoDB)</li>
+    <li>Frontend Functionality (Vanilla JS, DOM, UI Logic)</li>
+    <li>Development &amp; Cloud Infrastructure (Git, GitHub, AWS)</li>
+  </ol>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 1 -->
+  <h2>1. Authentication &amp; JWT (JSON Web Tokens)</h2>
+  
+  <h3>What is a JWT Token?</h3>
+  <p>A JSON Web Token (JWT) is an open standard that defines a compact and self-contained way for securely transmitting information between parties as a JSON object. This information can be verified and trusted because it is digitally signed. In our project, it consists of three parts separated by dots: <code>Header.Payload.Signature</code>.</p>
+
+  <h3>How is it used in this project?</h3>
+  <p>In ZKVault, JWT is used for <strong>Stateless Session Management</strong>. When a user logs in successfully (by proving they know their login password), the Node.js backend generates a JWT containing their unique MongoDB User ID. This token is signed using a secret key (<code>JWT_SECRET</code>) that only the server knows. The server sends this token back to the user's browser, where it is stored inside a secure, HTTP-only cookie.</p>
+  <p>For every subsequent request (e.g., fetching the vault, saving new passwords), the browser automatically sends this cookie. The server reads the JWT, verifies the signature mathematically, and immediately knows which user is making the request without having to look up the session in the database.</p>
+
+  <h3>What happens if we didn't use JWT?</h3>
+  <p>If we didn't use JWT, we would have to use <strong>Stateful Session IDs</strong>. The server would have to allocate memory to remember every logged-in user. Every time a user made a request, the server would have to query the database to ask, "Is this Session ID valid?". This slows down the database significantly and makes scaling the application across multiple AWS servers very difficult (because Server A wouldn't know about a session created on Server B). JWT solves this by storing the verification proof directly on the client side.</p>
+
+  <h3>Code Explanation (Backend Auth):</h3>
+  <div class="code-block">
+const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+res.cookie('token', token, { httpOnly: true, secure: true });
+  </div>
+  <ul>
+    <li><code>jwt.sign(...)</code>: A built-in function from the <code>jsonwebtoken</code> library. It takes the payload (<code>id: user._id</code>), hashes it using our secret environment variable, and creates the token string.</li>
+    <li><code>expiresIn: '1h'</code>: A security measure. The token self-destructs after 1 hour, forcing the user to re-authenticate, mitigating the risk if the token is stolen.</li>
+    <li><code>res.cookie('token', ...)</code>: Sends the token to the browser. <code>httpOnly: true</code> is a critical security line—it prevents hackers from stealing the token using JavaScript (XSS attacks).</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 2 -->
+  <h2>2. Zero-Knowledge Cryptography (The Core Engine)</h2>
+  <p>The entire premise of a "Zero-Knowledge" vault is that the server NEVER receives plaintext passwords. If AWS or MongoDB is breached, the hackers only get scrambled, useless data.</p>
+
+  <h3>PBKDF2 (Password-Based Key Derivation Function 2)</h3>
+  <p>When the user enters their Master Password on the frontend, it is technically just text. We cannot encrypt data using text. We must convert it into a highly complex cryptographic "Key".</p>
+  <div class="code-block">
+const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), {name: "PBKDF2"}, false, ["deriveKey"]);
+const key = await crypto.subtle.deriveKey(
+  { name: "PBKDF2", salt: enc.encode(email), iterations: 600000, hash: "SHA-256" },
+  keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+);
+  </div>
+  <ul>
+    <li><code>iterations: 600000</code>: This line intentionally slows down the key creation process (taking roughly 0.5 seconds). Why? Because if a hacker steals the encrypted vault and tries to brute-force guess the Master Password, they have to run this slow calculation for every single guess, making it mathematically impossible to hack in a human lifetime.</li>
+  </ul>
+
+  <h3>AES-256-GCM (Advanced Encryption Standard)</h3>
+  <p>Once the Key is derived, we use AES-256-GCM to encrypt the user's actual vault data (their saved Facebook, Bank, and Email passwords).</p>
+  <div class="code-block">
+const iv = crypto.getRandomValues(new Uint8Array(12));
+const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, data);
+  </div>
+  <ul>
+    <li><code>crypto.getRandomValues(...)</code>: Generates an Initialization Vector (IV). It ensures that even if you encrypt the exact same vault twice, the resulting encrypted blob looks completely different.</li>
+    <li><code>AES-GCM</code>: GCM stands for Galois/Counter Mode. It doesn't just encrypt data; it also creates an "Authentication Tag". This ensures that if a hacker tampers with or flips a single bit in the encrypted blob on the database, the decryption process will instantly detect the tampering and fail.</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Backend Architecture (Node.js, Express, MongoDB)</h2>
+  
+  <h3>Express Middleware &amp; Security</h3>
+  <p>The backend is built using Node.js and the Express framework.</p>
+  <div class="code-block">
+const app = express();
+app.use(helmet());
+app.use(cors({ origin: 'http://localhost:5000', credentials: true }));
+app.use(express.json({ limit: '2mb' }));
+  </div>
+  <ul>
+    <li><code>app.use(helmet())</code>: Helmet is a security library. It automatically attaches HTTP headers to every response sent to the browser. For example, it adds Content Security Policy (CSP) headers to prevent the browser from downloading unauthorized scripts, effectively blocking Cross-Site Scripting (XSS).</li>
+    <li><code>app.use(cors(...))</code>: Cross-Origin Resource Sharing. This restricts which external websites are allowed to make API calls to our backend.</li>
+    <li><code>express.json({ limit: '2mb' })</code>: Parses incoming JSON data, but strictly limits the size to 2 Megabytes. If we didn't have this limit, a hacker could send a 10-Gigabyte JSON payload and crash the AWS server (Denial of Service).</li>
+  </ul>
+
+  <h3>MongoDB Data Models</h3>
+  <p>MongoDB is a NoSQL database. We use Mongoose to define strict schemas so bad data cannot be saved.</p>
+  <div class="code-block">
+const VaultSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  encryptedBlob: { type: String, required: true },
+});
+  </div>
+  <ul>
+    <li>Notice how we DO NOT have fields for "Facebook Password" or "Bank URL". We only have <code>encryptedBlob</code>. The backend is completely blind to what is inside the blob.</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 4 -->
+  <h2>4. Frontend Functionality (Vanilla JS)</h2>
+  
+  <h3>DOM Manipulation &amp; Event Listeners</h3>
+  <p>The frontend is written in pure Vanilla JavaScript (no React or Angular) to ensure absolute control over memory and security.</p>
+  <div class="code-block">
+document.getElementById('save-btn').addEventListener('click', async () => {
+  const updates = { title: document.getElementById('title-input').value };
+  VaultStore.updateEntry(selectedId, updates);
+  await VaultStore.saveToServer();
+});
+  </div>
+  <ul>
+    <li><code>document.getElementById(...)</code>: This asks the browser's Document Object Model (DOM) to find the HTML element with the specified ID.</li>
+    <li><code>addEventListener('click')</code>: Listens for the user's mouse click. When clicked, it gathers the values from the text inputs, updates the local JavaScript array (VaultStore), triggers the AES encryption, and sends the newly encrypted blob to the Node.js server.</li>
+  </ul>
+
+  <h3>MutationObserver (Dynamic UI Icons)</h3>
+  <p>To ensure the UI looks professional, we use high-fidelity custom SVG icons.</p>
+  <div class="code-block">
+const observer = new MutationObserver((mutations) => {
+  mutations.forEach((mut) => {
+    // Finds old legacy icon classes and replaces them with inline SVGs
+  });
+});
+observer.observe(document.body, { childList: true, subtree: true });
+  </div>
+  <ul>
+    <li>This code watches the DOM in real-time. Whenever Javascript creates a new HTML element (like adding a new password entry to the sidebar), the Observer catches it and instantly injects our custom SVG icons (like the Banking or Mail icons), ensuring the design remains flawless without requiring external page reloads.</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 5 -->
+  <h2>5. Development &amp; Cloud Infrastructure Tools</h2>
+
+  <h3>Git &amp; GitHub</h3>
+  <ul>
+    <li><strong>Git</strong>: Git is the local version control software running on your machine. Every time you write code, you "commit" it. This takes a snapshot of the codebase. If you accidentally break the crypto logic, you can easily run <code>git revert</code> to go back in time.</li>
+    <li><strong>GitHub</strong>: GitHub is the cloud platform where Git repositories are hosted. It serves as a backup, a collaboration tool (via Pull Requests), and a CI/CD trigger.</li>
+    <li><strong>What if we didn't use them?</strong> You would have to manually create folders like "Project_Final", "Project_Final_v2", and collaborating with a team would be practically impossible.</li>
+  </ul>
+
+  <h3>AWS (Amazon Web Services) &amp; Cloud Deployment Concepts</h3>
+  <p>When this application moves to production, it leverages cloud infrastructure rather than a local laptop:</p>
+  <ul>
+    <li><strong>AWS EC2 (Elastic Compute Cloud)</strong>: Virtual servers in the cloud. This is where the Node.js backend would run.</li>
+    <li><strong>AWS S3 (Simple Storage Service)</strong>: Used for hosting the frontend HTML/CSS/JS files and the custom SVG assets. S3 is highly scalable and ensures fast loading speeds.</li>
+    <li><strong>MongoDB Atlas</strong>: A managed cloud database (often hosted on AWS servers). It automatically handles database backups, scaling, and security firewalls.</li>
+    <li><strong>HTTPS / SSL / TLS</strong>: Required for deployment. Without an SSL certificate (which encrypts the network tunnel), an attacker could sit on the same Wi-Fi network and steal the JWT or the encrypted blob as it travels from the browser to AWS.</li>
+  </ul>
+
+</body>
+</html>

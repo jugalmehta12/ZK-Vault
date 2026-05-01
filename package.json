@@ -1,22 +1,40 @@
 {
-  "name": "sgp",
+  "name": "zk-vault",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Zero-Knowledge Password Vault",
+  "main": "backend/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
     "lint": "npm run lint:backend && npm run lint:frontend",
-    "lint:backend": "npm --prefix backend run lint",
-    "lint:frontend": "eslint frontend/js --ext .js"
+    "lint:backend": "eslint backend --ext .js",
+    "lint:frontend": "eslint frontend/js --ext .js",
+    "test": "npm --prefix backend test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": "18.x"
+  },
   "devDependencies": {
     "eslint": "^8.57.1"
   },
   "dependencies": {
-    "@phosphor-icons/web": "^2.1.2"
+    "@phosphor-icons/web": "^2.1.2",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
+    "express-validator": "^7.3.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.3.1",
+    "qrcode": "^1.5.4",
+    "selfsigned": "^5.5.0",
+    "speakeasy": "^2.0.0"
   }
 }
