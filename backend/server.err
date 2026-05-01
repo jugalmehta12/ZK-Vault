@@ -1,0 +1,7 @@
+Register error: TypeError: next is not a function
+    at model.<anonymous> (C:\Users\dharm\OneDrive\Desktop\Jugal\College\4th_SEM\SGP\backend\models\User.js:48:3)
+    at async Kareem.execPre (C:\Users\dharm\OneDrive\Desktop\Jugal\College\4th_SEM\SGP\backend\node_modules\kareem\index.js:70:24)
+    at async model.$__save (C:\Users\dharm\OneDrive\Desktop\Jugal\College\4th_SEM\SGP\backend\node_modules\mongoose\lib\model.js:394:5)
+    at async model.save (C:\Users\dharm\OneDrive\Desktop\Jugal\College\4th_SEM\SGP\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async model.create (C:\Users\dharm\OneDrive\Desktop\Jugal\College\4th_SEM\SGP\backend\node_modules\mongoose\lib\model.js:2751:5)
+    at async C:\Users\dharm\OneDrive\Desktop\Jugal\College\4th_SEM\SGP\backend\routes\auth.js:43:20

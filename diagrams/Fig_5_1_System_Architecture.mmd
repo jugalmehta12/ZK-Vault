@@ -1,0 +1,27 @@
+flowchart TB
+    U[User]
+
+    subgraph CLIENT[Client Tier]
+        FE[React Frontend UI]
+        CE[Client-Side Cryptography\nWeb Crypto API\nPBKDF2 + AES-GCM]
+    end
+
+    subgraph SERVER[Application Tier]
+        API[Express and Node.js REST API]
+    end
+
+    subgraph DATA[Data Tier]
+        DB[(MongoDB Encrypted Vault Store)]
+    end
+
+    U -->|User actions| FE
+    FE -->|Master password input retained locally| CE
+    CE -->|Encrypt vault then send ciphertext, IV, salt| API
+    API -->|Persist encrypted blob| DB
+
+    DB -->|Fetch encrypted vault blob| API
+    API -->|Encrypted API response| FE
+    FE -->|Decrypt using derived key| CE
+    CE -->|Decrypted vault in browser memory| FE
+
+    API -.->|Zero-knowledge boundary server never receives plaintext| CE

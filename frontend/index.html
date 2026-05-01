@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0e0e11" />
+  <meta name="description" content="Zero-Knowledge Password Vault — your passwords encrypted in your browser. The server never sees your master password." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ZKVault" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%238b5cf6' width='180' height='180'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='white' font-family='system-ui'>🔐</text></svg>" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%238b5cf6' width='100' height='100'/><text x='50' y='50' dominant-baseline='middle' text-anchor='middle' font-size='60' fill='white'>🔐</text></svg>" />
+  <title>ZK Vault — Secure Password Manager</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     AUTH PAGE
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="auth-page" id="auth-page">
+
+  <!-- Hero Left Panel -->
+  <div class="auth-hero">
+    <div class="hero-orbs">
+      <div class="orb orb1"></div>
+      <div class="orb orb2"></div>
+    </div>
+
+    <div class="auth-hero-logo">
+      <div class="logo-icon">🔐</div>
+      <div class="logo-text">ZK<span>Vault</span></div>
+    </div>
+
+    <div class="hero-tagline">
+      <h1>Your Secrets,<br/>Your Keys Only.</h1>
+      <p>Zero-Knowledge architecture means we <strong>mathematically cannot</strong>
+         read your passwords. Ever.</p>
+    </div>
+
+    <div class="hero-features">
+      <div class="hero-feature">
+        <div class="hero-feature-icon">🔑</div>
+        <div class="hero-feature-text">
+          <h3>Client-Side Encryption</h3>
+          <p>AES-256-GCM + PBKDF2 — all in your browser</p>
+        </div>
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-icon">🛡️</div>
+        <div class="hero-feature-text">
+          <h3>Zero-Knowledge Proof</h3>
+          <p>Server stores only encrypted ciphertext</p>
+        </div>
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-icon">🔍</div>
+        <div class="hero-feature-text">
+          <h3>Breach Intelligence</h3>
+          <p>HIBP check via k-anonymity — private &amp; secure</p>
+        </div>
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-icon">📊</div>
+        <div class="hero-feature-text">
+          <h3>Vault Security Score</h3>
+          <p>Real-time risk analysis, entirely client-side</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Auth Panel -->
+  <div class="auth-panel">
+    <div class="auth-card">
+      <!-- Mobile logo -->
+      <div class="auth-mobile-logo">
+        <div class="logo-icon" style="width:40px;height:40px;font-size:1.3rem;border-radius:10px">🔐</div>
+        <span style="font-size:1.4rem;font-weight:800">ZK<span style="color:var(--accent-light)">Vault</span></span>
+      </div>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Create Account</button>
+      </div>
+
+      <!-- Error / success alerts -->
+      <div id="auth-alert" style="display:none;padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:0.875rem;"></div>
+
+      <!-- LOGIN FORM -->
+      <form class="auth-form" id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email Address</label>
+          <input class="form-input" id="login-email" type="email" placeholder="you@example.com" required autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Account Password</label>
+          <div class="input-wrap">
+            <input class="form-input" id="login-password" type="password" placeholder="Your account password" required autocomplete="current-password" />
+            <div class="input-actions">
+              <button type="button" class="btn-icon toggle-pw" data-target="login-password" title="Show/hide">👁</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group form-hidden" id="mfa-field-wrap">
+          <label class="form-label" for="login-mfa">Authenticator Code</label>
+          <input class="form-input" id="login-mfa" type="text" placeholder="6-digit code" maxlength="6" autocomplete="one-time-code" />
+        </div>
+        <button class="btn btn-primary" type="submit" id="login-btn" style="width:100%;justify-content:center;padding:12px">
+          Sign In
+        </button>
+        <div style="text-align:center;margin-top:12px;display:none" id="signin-forgot-wrap">
+          <button type="button" id="signin-forgot-password-btn" class="btn-link" style="color:var(--purple);cursor:pointer;background:none;border:none;font-size:0.9rem;text-decoration:underline">Forgot Master Password?</button>
+        </div>
+        <div class="auth-footer">
+          🔒 Protected by end-to-end encryption.<br/>Your master password never leaves your device.
+        </div>
+      </form>
+
+      <!-- REGISTER FORM -->
+      <form class="auth-form form-hidden" id="register-form" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label class="form-label" for="reg-email">Email Address</label>
+          <input class="form-input" id="reg-email" type="email" placeholder="you@example.com" required autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-password">Account Password</label>
+          <div class="input-wrap">
+            <input class="form-input" id="reg-password" type="password" placeholder="Min 8 chars, upper, digit, symbol" required autocomplete="new-password" />
+            <div class="input-actions">
+              <button type="button" class="btn-icon toggle-pw" data-target="reg-password" title="Show/hide">👁</button>
+            </div>
+          </div>
+          <div class="strength-bar-wrap" style="margin-top:6px"><div class="strength-bar" id="reg-strength-bar"></div></div>
+          <div class="strength-info"><span class="strength-label" id="reg-strength-label"></span></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-confirm">Confirm Password</label>
+          <input class="form-input" id="reg-confirm" type="password" placeholder="Repeat password" required autocomplete="new-password" />
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <input type="checkbox" id="enable-recovery" style="width:18px;height:18px;cursor:pointer" />
+            <label for="enable-recovery" style="cursor:pointer;font-size:0.95rem;margin:0">🛟 Set up account recovery (optional)</label>
+          </div>
+          <div id="recovery-setup" style="display:none;gap:12px;flex-direction:column">
+            <p style="color:var(--text-secondary);font-size:0.85rem;margin:0">
+              Create a recovery phrase to regain access if you forget your master password. Write it down somewhere safe!
+            </p>
+            <div class="form-group">
+              <label class="form-label" for="reg-recovery-phrase">Recovery Phrase</label>
+              <input class="form-input" id="reg-recovery-phrase" type="text" placeholder="e.g., MyDog2020BlueSky (mix letters, numbers, symbols)" autocomplete="off" />
+              <small style="color:var(--text-secondary);display:block;margin-top:6px">Min 12 characters • Mix letters, numbers, symbols for security</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="reg-recovery-hint">Recovery Hint (optional)</label>
+              <input class="form-input" id="reg-recovery-hint" type="text" placeholder="e.g., My favorite dog's name and favorite color" autocomplete="off" />
+              <small style="color:var(--text-secondary);display:block;margin-top:6px">A hint to help you remember your recovery phrase</small>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit" id="reg-btn" style="width:100%;justify-content:center;padding:12px;margin-top:16px">
+          Create Account
+        </button>
+        <div class="auth-footer">
+          By registering you agree to store an encrypted vault on our servers.<br/>
+          We <strong>cannot</strong> recover your master password.
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MASTER PASSWORD SCREEN
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div id="master-screen">
+  <div class="master-card">
+    <span class="master-icon">🗝️</span>
+    <h2 class="master-title">Enter Master Password</h2>
+    <p class="master-sub">
+      This password is <em>never</em> sent to the server.<br/>
+      It derives your encryption key locally to unlock your vault.
+    </p>
+    <form id="master-form" onsubmit="handleMasterPassword(event)" style="display:flex;flex-direction:column;gap:16px">
+      <div class="form-group">
+        <label class="form-label" for="master-input">Master Password</label>
+        <div class="input-wrap">
+          <input class="form-input" id="master-input" type="password" placeholder="Enter your master password…" required autofocus />
+          <div class="input-actions">
+            <button type="button" class="btn-icon toggle-pw" data-target="master-input">👁</button>
+          </div>
+        </div>
+      </div>
+      <div id="master-error" style="display:none;color:var(--red);font-size:0.85rem;text-align:center"></div>
+      <button class="btn btn-primary" type="submit" id="master-btn" style="width:100%;justify-content:center;padding:13px;font-size:1rem">
+        🔓 Unlock Vault
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Recovery Modal -->
+<div id="recovery-modal" class="modal is-hidden">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-header">
+      <span class="modal-title">🛟 Recover Account</span>
+      <button type="button" class="btn-icon" id="recovery-modal-close">✕</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+      <p style="color:var(--text-secondary);font-size:0.95rem">
+        If you configured a recovery phrase during account setup, you can use it to reset your master password and regain access to your vault.
+      </p>
+      <div class="form-group">
+        <label class="form-label" for="recovery-email">Email Address</label>
+        <input class="form-input" id="recovery-email" type="email" placeholder="your@example.com" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="recovery-phrase">Recovery Phrase</label>
+        <textarea class="form-input" id="recovery-phrase" placeholder="Enter your recovery phrase…" required style="min-height:80px;font-family:monospace"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="recovery-new-password">New Master Password</label>
+        <input class="form-input" id="recovery-new-password" type="password" placeholder="Create a new master password…" required />
+      </div>
+      <div id="recovery-error" style="display:none;color:var(--red);font-size:0.85rem;padding:12px;background:rgba(255,0,0,0.1);border-radius:6px"></div>
+      <button type="button" id="recovery-submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px">Reset Master Password</button>
+      <p style="color:var(--text-secondary);font-size:0.8rem;text-align:center">Don't have a recovery phrase? Contact support or check your email for setup details.</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- Scripts -->
+<script src="/js/crypto.js"></script>
+<script src="/js/risk.js"></script>
+<script src="/js/generator.js"></script>
+<script src="/js/vault.js"></script>
+<script src="/js/auth.js"></script>
+
+<script>
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('login-form').classList.toggle('form-hidden', !isLogin);
+    document.getElementById('register-form').classList.toggle('form-hidden', isLogin);
+    document.getElementById('tab-login').classList.toggle('active', isLogin);
+    document.getElementById('tab-register').classList.toggle('active', !isLogin);
+    hideAlert();
+  }
+
+  // ── Alert helpers ────────────────────────────────────────────────────────
+  function showAlert(msg, type = 'error') {
+    const el = document.getElementById('auth-alert');
+    el.style.display = 'block';
+    el.style.background = type === 'error' ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)';
+    el.style.border = `1px solid ${type === 'error' ? 'rgba(239,68,68,0.4)' : 'rgba(16,185,129,0.4)'}`;
+    el.style.color = type === 'error' ? 'var(--red)' : 'var(--green)';
+    el.textContent = msg;
+  }
+  function hideAlert() { document.getElementById('auth-alert').style.display = 'none'; }
+
+  // ── Toggle password visibility ────────────────────────────────────────────
+  document.querySelectorAll('.toggle-pw').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = document.getElementById(btn.dataset.target);
+      if (t) { t.type = t.type === 'password' ? 'text' : 'password'; btn.textContent = t.type === 'password' ? '👁' : '🙈'; }
+    });
+  });
+
+  // ── Recovery setup toggle ─────────────────────────────────────────────────
+  document.getElementById('enable-recovery')?.addEventListener('change', (e) => {
+    const recoverySetup = document.getElementById('recovery-setup');
+    if (e.target.checked) {
+      recoverySetup.style.display = 'flex';
+    } else {
+      recoverySetup.style.display = 'none';
+      document.getElementById('reg-recovery-phrase').value = '';
+      document.getElementById('reg-recovery-hint').value = '';
+    }
+  });
+
+  // ── Forgot Password / Recovery ────────────────────────────────────────────
+  const recoveryModal = document.getElementById('recovery-modal');
+  document.getElementById('signin-forgot-password-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    recoveryModal.classList.remove('is-hidden');
+    document.getElementById('recovery-email').focus();
+  });
+  document.getElementById('recovery-modal-close')?.addEventListener('click', () => {
+    recoveryModal.classList.add('is-hidden');
+  });
+  document.getElementById('recovery-submit')?.addEventListener('click', async () => {
+    const email = document.getElementById('recovery-email').value.trim();
+    const phrase = document.getElementById('recovery-phrase').value.trim();
+    const newPassword = document.getElementById('recovery-new-password').value;
+    const errorDiv = document.getElementById('recovery-error');
+    const btn = document.getElementById('recovery-submit');
+    
+    if (!email || !phrase || !newPassword) {
+      errorDiv.textContent = 'Please fill all fields';
+      errorDiv.style.display = 'block';
+      return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+    try {
+      const { ok, data } = await Auth.apiFetch('/api/auth/recovery/reset', {
+        method: 'POST',
+        body: JSON.stringify({ email, recoveryPhrase: phrase, newPassword })
+      });
+      if (ok) {
+        showAlert('Master password reset successfully! You can now log in.', 'success');
+        recoveryModal.classList.add('is-hidden');
+        document.getElementById('recovery-email').value = '';
+        document.getElementById('recovery-phrase').value = '';
+        document.getElementById('recovery-new-password').value = '';
+        errorDiv.style.display = 'none';
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        errorDiv.textContent = data.message || 'Recovery failed. Check your email and phrase.';
+        errorDiv.style.display = 'block';
+      }
+    } catch (e) {
+      errorDiv.textContent = 'Error: ' + e.message;
+      errorDiv.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Reset Master Password';
+  });
+
+  // ── Live strength meter on register form ───────────────────────────────────
+  document.getElementById('reg-password').addEventListener('input', (e) => {
+    const s = RiskEngine.scorePassword(e.target.value);
+    document.getElementById('reg-strength-bar').style.width = ((s.score/5)*100) + '%';
+    document.getElementById('reg-strength-bar').style.background = s.color;
+    document.getElementById('reg-strength-label').textContent = s.label;
+    document.getElementById('reg-strength-label').style.color = s.color;
+  });
+
+  // ── Register ──────────────────────────────────────────────────────────────
+  async function handleRegister(e) {
+    e.preventDefault();
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+    const confirm = document.getElementById('reg-confirm').value;
+    if (password !== confirm) { showAlert('Passwords do not match'); return; }
+    
+    // Check recovery setup
+    const enableRecovery = document.getElementById('enable-recovery').checked;
+    let recoveryPhrase = '';
+    let recoveryHint = '';
+    if (enableRecovery) {
+      recoveryPhrase = document.getElementById('reg-recovery-phrase').value.trim();
+      recoveryHint = document.getElementById('reg-recovery-hint').value.trim();
+      if (!recoveryPhrase) { showAlert('Recovery phrase is required'); return; }
+      if (recoveryPhrase.length < 12) { showAlert('Recovery phrase must be at least 12 characters'); return; }
+    }
+    
+    const btn = document.getElementById('reg-btn');
+    btn.disabled = true; btn.textContent = 'Creating account…';
+    hideAlert();
+    const { ok, data } = await Auth.register(email, password);
+    btn.disabled = false; btn.textContent = 'Create Account';
+    if (data.success) {
+      // If recovery is enabled, configure it
+      if (enableRecovery) {
+        const recoveryOk = await Auth.apiFetch('/api/auth/recovery/configure', {
+          method: 'POST',
+          body: JSON.stringify({ encryptedMaster: '', iv: '', salt: '', hint: recoveryHint, recoveryPhrase })
+        });
+        if (!recoveryOk.ok) {
+          console.warn('Recovery setup failed, but account created');
+        }
+      }
+      showMasterScreen();
+    }
+    else {
+      const msg = data.errors ? data.errors.map(err => err.message).join(', ') : data.message;
+      showAlert(msg);
+    }
+  }
+
+  // ── Login ─────────────────────────────────────────────────────────────────
+  async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const mfaToken = document.getElementById('login-mfa').value;
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    hideAlert();
+    document.getElementById('signin-forgot-wrap').style.display = 'none';
+    const { ok, status, data } = await Auth.login(email, password, mfaToken);
+    btn.disabled = false; btn.textContent = 'Sign In';
+    if (data.success) {
+      showMasterScreen();
+    } else if (data.mfaRequired) {
+      document.getElementById('mfa-field-wrap').classList.remove('form-hidden');
+      showAlert('Enter your 6-digit authenticator code', 'success');
+    } else {
+      showAlert(data.message || 'Login failed');
+      document.getElementById('signin-forgot-wrap').style.display = 'block';
+    }
+  }
+
+  // ── Show master password screen ────────────────────────────────────────────
+  function showMasterScreen() {
+    document.getElementById('master-screen').classList.add('active');
+  }
+
+  // ── Unlock vault ──────────────────────────────────────────────────────────
+  async function handleMasterPassword(e) {
+    e.preventDefault();
+    const masterPassword = document.getElementById('master-input').value;
+    const btn = document.getElementById('master-btn');
+    const errEl = document.getElementById('master-error');
+    btn.disabled = true; btn.textContent = '🔒 Deriving key…';
+    errEl.style.display = 'none';
+
+    const success = await Auth.unlockVault(masterPassword);
+    btn.disabled = false; btn.textContent = '🔓 Unlock Vault';
+
+    if (success) {
+      window.location.href = '/vault.html';
+    } else {
+      errEl.style.display = 'block';
+      errEl.textContent = 'Wrong master password or vault corrupted.';
+    }
+  }
+
+  // ── Check if already logged in ────────────────────────────────────────────
+  (async () => {
+    try {
+      const { ok } = await Auth.getMe();
+      if (ok) showMasterScreen();
+    } catch (e) {
+      if (e.message === 'Network Error' && localStorage.getItem('offline_vault')) {
+        showAlert('You are offline. Proceeding to unlock local vault cache.', 'info');
+        showMasterScreen();
+      }
+    }
+  })();
+
+  // ── Service Worker Registration ───────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    });
+  }
+</script>
+</body>
+</html>

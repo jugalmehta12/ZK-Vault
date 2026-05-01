@@ -1,0 +1,44 @@
+[
+  {
+    "msg": "CSRF Cookie obtained",
+    "data": "0a7226e9819a5a62dc86eb769a41fb87a15dc3d1a02a2e505769b671e027503e"
+  },
+  {
+    "msg": "Register Response",
+    "data": {
+      "success": true,
+      "message": "Registration successful.",
+      "user": {
+        "id": "69bcf94d16e0911ab85b9ba6",
+        "email": "test-1773992269076@zkvault.dev",
+        "mfaEnabled": false
+      }
+    }
+  },
+  {
+    "msg": "Session Cookie after register",
+    "data": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YmNmOTRkMTZlMDkxMWFiODViOWJhNiIsImlhdCI6MTc3Mzk5MjI3MCwiZXhwIjoxNzczOTk5NDcwfQ.nZAlCnOkLJ8TycY_oMCTcHQzID2eIpr5Ba5oTCDXke4"
+  },
+  {
+    "msg": "Save Vault Response",
+    "data": {
+      "success": true,
+      "message": "Vault saved securely."
+    }
+  },
+  {
+    "msg": "Get Vault Response",
+    "data": {
+      "success": true,
+      "vault": {
+        "encryptedVault": "ZmFrZV9lbmNyeXB0ZWRfZGF0YQ==",
+        "vaultIV": "ZmFrZV9pdg==",
+        "vaultSalt": "ZmFrZV9zYWx0"
+      }
+    }
+  },
+  {
+    "msg": "Final",
+    "data": "FAILED"
+  }
+]

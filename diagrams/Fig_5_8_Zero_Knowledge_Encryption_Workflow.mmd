@@ -1,0 +1,13 @@
+flowchart TD
+    MP[Master Password]
+    KDF[PBKDF2 Key Derivation]
+    ENC[AES-GCM Encryption]
+    STORE[(Ciphertext Storage in MongoDB)]
+    RET[Retrieve Ciphertext]
+    DEC[Client-side Decryption]
+
+    MP --> KDF
+    KDF --> ENC
+    ENC --> STORE
+    STORE --> RET
+    RET --> DEC

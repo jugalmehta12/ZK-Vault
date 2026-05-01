@@ -1,0 +1,6 @@
+[verbose] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o
+[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+[INFO] Master screen active: true
+[verbose] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o
+[verbose] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o
+[INFO] Final URL: http://localhost:5000/vault.html

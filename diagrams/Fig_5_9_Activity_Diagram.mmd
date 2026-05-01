@@ -1,0 +1,17 @@
+flowchart TD
+    A([Start]) --> B[Launch application]
+    B --> C[Submit login credentials]
+    C --> D{Credentials valid?}
+    D -->|No| E[Display authentication error]
+    E --> C
+    D -->|Yes| F[Enter master password]
+    F --> G[Derive key via PBKDF2]
+    G --> H[Retrieve encrypted vault]
+    H --> I[Decrypt vault locally using AES-GCM]
+    I --> J[Display vault dashboard]
+
+    J --> K[Perform vault operations]
+    K --> L[Run password risk analysis]
+    L --> M[Encrypt updated vault]
+    M --> N[Store encrypted payload]
+    N --> O([End])

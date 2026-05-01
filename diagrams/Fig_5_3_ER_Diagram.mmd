@@ -1,0 +1,24 @@
+erDiagram
+    USERS {
+        string user_id PK
+        string email UK
+        string master_password_hash
+    }
+
+    VAULT_ENTRIES {
+        string entry_id PK
+        string website
+        string username
+        string encrypted_password
+        string user_id FK
+    }
+
+    RISK_ANALYSIS {
+        string analysis_id PK
+        int strength_score
+        boolean reuse_detected
+        string user_id FK
+    }
+
+    USERS ||--o{ VAULT_ENTRIES : stores
+    USERS ||--o{ RISK_ANALYSIS : generates
