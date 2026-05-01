@@ -74,7 +74,20 @@ router.get('/', protect, async (req, res) => {
 // DELETE /api/shares/:id
 router.delete('/:id', protect, async (req, res) => {
   try {
-    await Share.findByIdAndDelete(req.params.id);
+    // BUG-04 FIX: Only allow sender or receiver to delete the share
+    const deleted = await Share.findOneAndDelete({
+      _id: req.params.id,
+      $or: [
+        { sender: req.user._id },
+        { receiverEmail: req.user.email },
+      ],
+    });
+
+    if (!deleted) {
+      // Return 404 regardless — don't reveal whether the share exists to unauthorized users
+      return res.status(404).json({ success: false, message: 'Share not found.' });
+    }
+
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error' });

@@ -4,6 +4,31 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
+  const THEME_KEY = 'zk_theme';
+
+  function applyTheme(theme) {
+    const body = document.body;
+    body.dataset.theme = theme;
+    body.classList.toggle('theme-light', theme === 'light');
+    body.classList.toggle('theme-dark', theme === 'dark');
+    const button = document.getElementById('theme-toggle-btn');
+    if (button) button.textContent = theme === 'light' ? '🌙' : '☀️';
+    localStorage.setItem(THEME_KEY, theme);
+  }
+
+  function toggleTheme() {
+    const current = document.body.dataset.theme || 'dark';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  }
+
+  function initTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    applyTheme(saved || 'light');
+    document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleTheme);
+  }
+
+  initTheme();
+
   // ── Check session ──────────────────────────────────────────────────────────
   const { ok, data } = await Auth.getMe().catch(() => ({ ok: false }));
   if (!ok) {
@@ -14,15 +39,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('user-email').textContent = data.user.email;
 
   // ── Restore vault state from sessionStorage ────────────────────────────────
-  const storedMaster = sessionStorage.getItem('zk_master');
+  // SEC-03: zk_master is no longer stored in sessionStorage.
+  // The CryptoKey lives in VaultStore memory. On the same-session navigation
+  // from index.html → vault.html the key is already set.
+  // On a fresh page load (refresh / direct URL), only the salt + encrypted
+  // vault entries are available — the user must re-enter master password.
   const storedSalt = sessionStorage.getItem('zk_salt');
   const storedVault = sessionStorage.getItem('zk_vault');
+  const hasKeyInMemory = !!VaultStore.getKey?.();
 
-  // If the user hasn't unlocked the vault in this session, prompt inline
-  // for the master password and attempt to decrypt the offline vault
-  // cache instead of redirecting away. This improves UX for returning
-  // users who still have an encrypted vault cached locally.
-  if (!storedMaster || !storedSalt) {
+  // If the key is already in memory (same JS session), restore entries from
+  // sessionStorage cache and continue without any unlock prompt.
+  if (hasKeyInMemory && storedVault) {
+    try {
+      VaultStore.setEntries(JSON.parse(storedVault));
+    } catch (err) {
+      console.error('Failed to restore cached vault entries:', err);
+    }
+  }
+
+  // If we have NO key in memory but have a salt, we need the master password
+  // to re-derive the key. Show the unlock modal.
+  if (!hasKeyInMemory) {
     // show unlock modal
     toggleModal('unlock-modal', true);
     document.getElementById('unlock-master-input')?.focus();
@@ -57,19 +95,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('unlock-master-input')?.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') unlockHandler(); });
     document.getElementById('unlock-modal-close')?.addEventListener('click', () => toggleModal('unlock-modal', false));
     document.getElementById('unlock-master-cancel')?.addEventListener('click', () => toggleModal('unlock-modal', false));
-  }
-
-  if (storedMaster && storedSalt) {
-    try {
-      const key = await ZKCrypto.deriveKey(storedMaster, storedSalt);
-      VaultStore.setKey(key);
-      VaultStore.setSalt(storedSalt);
-      if (storedVault) {
-        VaultStore.setEntries(JSON.parse(storedVault));
-      }
-    } catch (err) {
-      console.error('Failed to restore vault crypto context:', err);
-    }
   }
 
   // ── Render entries ─────────────────────────────────────────────────────────
@@ -360,6 +385,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const li = document.createElement('li');
       li.className = 'entry-item' + (e.id === selectedId ? ' active' : '');
       li.dataset.id = e.id;
+      // Tooltip shown in collapsed sidebar mode (icon-only view)
+      const tooltipSub = e.username || e.url || e.category || '';
+      li.dataset.tooltip = tooltipSub
+        ? `${e.title || 'Untitled'}\n${tooltipSub}`
+        : (e.title || 'Untitled');
       const audit = auditCache[e.id] || {};
       let badges = '';
       if (audit.breached) badges += '<span class="badge badge-danger">Breached</span>';
@@ -738,10 +768,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           showToast(rollbackData?.message || 'Rollback failed', 'error');
           return;
         }
-        const master = sessionStorage.getItem('zk_master');
-        if (master) await Auth.unlockVault(master);
+        // SEC-03: zk_master no longer in sessionStorage — prompt user to unlock with master password
+        toggleModal('unlock-modal', true);
+        document.getElementById('unlock-master-input')?.focus();
         refreshList();
-        showToast('Vault rolled back successfully', 'success');
+        showToast('Vault rolled back. Re-enter master password if prompted.', 'success');
       });
     });
   });
@@ -825,40 +856,73 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  document.getElementById('configure-recovery-btn')?.addEventListener('click', async () => {
-    const master = sessionStorage.getItem('zk_master');
-    if (!master) {
+  // ── Recovery Configure Modal ───────────────────────────────────────────────
+  document.getElementById('configure-recovery-btn')?.addEventListener('click', () => {
+    // SEC-03 FIX: check in-memory key instead of removed zk_master sessionStorage
+    if (!VaultStore.getKey()) {
       showToast('Unlock vault first to configure recovery', 'error');
       return;
     }
+    // Reset modal state
+    document.getElementById('recovery-phrase-input').value = '';
+    document.getElementById('recovery-hint-input').value = '';
+    const errEl = document.getElementById('recovery-modal-error');
+    errEl.classList.add('is-hidden');
+    errEl.textContent = '';
+    toggleModal('recovery-modal', true);
+    document.getElementById('recovery-phrase-input').focus();
+  });
 
-    const recoveryPhrase = prompt('Enter a recovery phrase (store it safely):');
-    if (!recoveryPhrase || recoveryPhrase.length < 8) {
-      showToast('Recovery phrase must be at least 8 characters', 'error');
+  document.getElementById('recovery-modal-close')?.addEventListener('click', () => toggleModal('recovery-modal', false));
+  document.getElementById('recovery-modal-cancel')?.addEventListener('click', () => toggleModal('recovery-modal', false));
+
+  document.getElementById('recovery-modal-submit')?.addEventListener('click', async () => {
+    const recoveryPhrase = document.getElementById('recovery-phrase-input').value.trim();
+    const hint = document.getElementById('recovery-hint-input').value.trim();
+    const errEl = document.getElementById('recovery-modal-error');
+    const btn = document.getElementById('recovery-modal-submit');
+
+    errEl.classList.add('is-hidden');
+    errEl.textContent = '';
+
+    if (!recoveryPhrase || recoveryPhrase.length < 12) {
+      errEl.textContent = 'Recovery phrase must be at least 12 characters.';
+      errEl.classList.remove('is-hidden');
       return;
     }
-    const hint = prompt('Optional hint (never include the phrase itself):') || '';
+
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
 
     try {
-      const salt = ZKCrypto.generateSalt();
-      const recoveryKey = await ZKCrypto.deriveKey(recoveryPhrase, salt);
-      const { ciphertext, iv } = await ZKCrypto.encryptVault(recoveryKey, master);
+      // BUG-02 FIX: backend bcrypt-hashes the recoveryPhrase server-side
       const { ok, data } = await Auth.configureRecovery({
-        encryptedMaster: ciphertext,
-        iv,
-        salt: ZKCrypto.bufferToBase64(salt),
+        recoveryPhrase,
         hint,
+        encryptedMaster: '',
+        iv: '',
+        salt: '',
       });
       if (!ok) throw new Error(data?.message || 'Recovery setup failed');
-      document.getElementById('recovery-status').textContent = 'Recovery configured. Keep your recovery phrase offline.';
+
+      toggleModal('recovery-modal', false);
+      document.getElementById('recovery-status').textContent =
+        hint
+          ? `Recovery configured. (Hint: ${hint})`
+          : 'Recovery configured. Keep your recovery phrase offline.';
       dashboardState.recoveryEnabled = true;
       renderChecklistWidget();
       addTimelineEvent('Recovery configured', 'Recovery phrase enabled');
-      showToast('Recovery configured successfully', 'success');
+      showToast('Recovery phrase saved successfully ✓', 'success');
     } catch (err) {
-      showToast(err.message, 'error');
+      errEl.textContent = err.message;
+      errEl.classList.remove('is-hidden');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save Recovery Phrase';
     }
   });
+
 
   async function refreshRecoveryStatus() {
     const el = document.getElementById('recovery-status');
@@ -1170,8 +1234,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function getCategoryIcon(cat) {
-    const icons = { Login: '🔑', Email: '📧', Banking: '🏦', Social: '💬', Shopping: '🛒', Work: '💼', Note: '📝' };
-    return icons[cat] || '🔐';
+    const icons = {
+      Login: window.ZKIcons?.asset('key-entries') || '<i class="ph-fill ph-key"></i>',
+      Email: window.ZKIcons?.asset('mail') || '<i class="ph-fill ph-envelope"></i>',
+      Banking: window.ZKIcons?.asset('banking') || '<i class="ph-fill ph-bank"></i>',
+      Social: window.ZKIcons?.asset('social-media') || '<i class="ph-fill ph-chat-circle"></i>',
+      Shopping: window.ZKIcons?.asset('shopping') || '<i class="ph-fill ph-shopping-cart"></i>',
+      Work: window.ZKIcons?.asset('work-accounts') || '<i class="ph-fill ph-briefcase"></i>',
+      Note: window.ZKIcons?.asset('secure-notes') || '<i class="ph-fill ph-notepad"></i>'
+    };
+    const fallback = window.ZKIcons?.asset('app-logo') || '<i class="ph-fill ph-lock-key"></i>';
+    return `<span class="zk-icon">${icons[cat] || fallback}</span>`;
   }
 
   function escHtml(str) {

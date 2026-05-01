@@ -1,0 +1,60 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset="utf-8">
+<title>Testing Table</title>
+<style>
+  table { border-collapse: collapse; width: 100%; font-family: 'Segoe UI', Arial, sans-serif; }
+  th, td { border: 1px solid #999; padding: 8px; text-align: left; }
+  th { background-color: #2F5496; color: white; }
+  tr:nth-child(even) { background-color: #F2F2F2; }
+  .pass { color: #38761D; font-weight: bold; }
+</style>
+</head>
+<body>
+  <h2 style="font-family: 'Segoe UI', Arial, sans-serif;">System Testing Summary (ZKVault)</h2>
+  <table>
+    <tr>
+      <th>Test ID</th>
+      <th>Module</th>
+      <th>Test Scenario</th>
+      <th>Expected Result</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td>TC-01</td>
+      <td>Auth & Cryptography</td>
+      <td>Login with valid Master Password</td>
+      <td>Grants access, derives PBKDF2 key, and decrypts vault</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>TC-02</td>
+      <td>Zero-Knowledge Sync</td>
+      <td>Intercept payload during server sync</td>
+      <td>Data is AES-256-GCM encrypted; server cannot read it</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>TC-03</td>
+      <td>Risk Engine</td>
+      <td>Input a password known in HIBP breach database</td>
+      <td>Flags password as "Breached" via k-anonymity API</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>TC-04</td>
+      <td>Secure Sharing</td>
+      <td>Share an entry using recipient's Public Key</td>
+      <td>Only the recipient can decrypt it via their Private Key</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>TC-05</td>
+      <td>Session Management</td>
+      <td>Revoke an active session from the dashboard</td>
+      <td>The targeted device is immediately logged out</td>
+      <td class="pass">Pass</td>
+    </tr>
+  </table>
+</body>
+</html>

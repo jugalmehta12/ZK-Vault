@@ -9,10 +9,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="ZKVault" />
   <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%238b5cf6' width='180' height='180'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='white' font-family='system-ui'>🔐</text></svg>" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%238b5cf6' width='100' height='100'/><text x='50' y='50' dominant-baseline='middle' text-anchor='middle' font-size='60' fill='white'>🔐</text></svg>" />
+  <link rel="apple-touch-icon" href="/icons/vault-svgrepo-com.svg" />
+  <link rel="icon" type="image/svg+xml" href="/icons/vault-svgrepo-com.svg" />
   <title>ZK Vault — Secure Password Manager</title>
   <link rel="stylesheet" href="/css/style.css" />
+  <script src="/js/icons.js"></script>
 </head>
 <body>
 
@@ -29,7 +30,7 @@
     </div>
 
     <div class="auth-hero-logo">
-      <div class="logo-icon">🔐</div>
+      <div class="logo-icon"><i class="ph-fill ph-lock-key"></i></div>
       <div class="logo-text">ZK<span>Vault</span></div>
     </div>
 
@@ -41,28 +42,28 @@
 
     <div class="hero-features">
       <div class="hero-feature">
-        <div class="hero-feature-icon">🔑</div>
+        <div class="hero-feature-icon"><i class="ph-fill ph-key"></i></div>
         <div class="hero-feature-text">
           <h3>Client-Side Encryption</h3>
           <p>AES-256-GCM + PBKDF2 — all in your browser</p>
         </div>
       </div>
       <div class="hero-feature">
-        <div class="hero-feature-icon">🛡️</div>
+        <div class="hero-feature-icon"><i class="ph-fill ph-shield-check"></i></div>
         <div class="hero-feature-text">
           <h3>Zero-Knowledge Proof</h3>
           <p>Server stores only encrypted ciphertext</p>
         </div>
       </div>
       <div class="hero-feature">
-        <div class="hero-feature-icon">🔍</div>
+        <div class="hero-feature-icon"><i class="ph-fill ph-magnifying-glass"></i></div>
         <div class="hero-feature-text">
           <h3>Breach Intelligence</h3>
           <p>HIBP check via k-anonymity — private &amp; secure</p>
         </div>
       </div>
       <div class="hero-feature">
-        <div class="hero-feature-icon">📊</div>
+        <div class="hero-feature-icon"><i class="ph-fill ph-chart-bar"></i></div>
         <div class="hero-feature-text">
           <h3>Vault Security Score</h3>
           <p>Real-time risk analysis, entirely client-side</p>
@@ -76,8 +77,8 @@
     <div class="auth-card">
       <!-- Mobile logo -->
       <div class="auth-mobile-logo">
-        <div class="logo-icon" style="width:40px;height:40px;font-size:1.3rem;border-radius:10px">🔐</div>
-        <span style="font-size:1.4rem;font-weight:800">ZK<span style="color:var(--accent-light)">Vault</span></span>
+        <div class="logo-icon" style="width:40px;height:40px;font-size:1.2rem;border-radius:10px"><i class="ph-fill ph-lock-key"></i></div>
+        <span class="logo-text" style="font-size:1.3rem">ZK<span>Vault</span></span>
       </div>
 
       <!-- Tabs -->
@@ -87,7 +88,7 @@
       </div>
 
       <!-- Error / success alerts -->
-      <div id="auth-alert" style="display:none;padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:0.875rem;"></div>
+      <div id="auth-alert" style="display:none" class="auth-alert"></div>
 
       <!-- LOGIN FORM -->
       <form class="auth-form" id="login-form" onsubmit="handleLogin(event)">
@@ -100,7 +101,7 @@
           <div class="input-wrap">
             <input class="form-input" id="login-password" type="password" placeholder="Your account password" required autocomplete="current-password" />
             <div class="input-actions">
-              <button type="button" class="btn-icon toggle-pw" data-target="login-password" title="Show/hide">👁</button>
+              <button type="button" class="btn-icon toggle-pw" data-target="login-password" title="Show/hide"><i class="ph ph-eye"></i></button>
             </div>
           </div>
         </div>
@@ -108,11 +109,9 @@
           <label class="form-label" for="login-mfa">Authenticator Code</label>
           <input class="form-input" id="login-mfa" type="text" placeholder="6-digit code" maxlength="6" autocomplete="one-time-code" />
         </div>
-        <button class="btn btn-primary" type="submit" id="login-btn" style="width:100%;justify-content:center;padding:12px">
-          Sign In
-        </button>
-        <div style="text-align:center;margin-top:12px;display:none" id="signin-forgot-wrap">
-          <button type="button" id="signin-forgot-password-btn" class="btn-link" style="color:var(--purple);cursor:pointer;background:none;border:none;font-size:0.9rem;text-decoration:underline">Forgot Master Password?</button>
+        <button class="btn btn-primary btn-full" type="submit" id="login-btn">Sign In</button>
+        <div class="forgot-wrap is-hidden" id="signin-forgot-wrap">
+          <button type="button" id="signin-forgot-password-btn" class="btn-link">Forgot Master Password?</button>
         </div>
         <div class="auth-footer">
           🔒 Protected by end-to-end encryption.<br/>Your master password never leaves your device.
@@ -130,40 +129,36 @@
           <div class="input-wrap">
             <input class="form-input" id="reg-password" type="password" placeholder="Min 8 chars, upper, digit, symbol" required autocomplete="new-password" />
             <div class="input-actions">
-              <button type="button" class="btn-icon toggle-pw" data-target="reg-password" title="Show/hide">👁</button>
+              <button type="button" class="btn-icon toggle-pw" data-target="reg-password" title="Show/hide"><i class="ph ph-eye"></i></button>
             </div>
           </div>
-          <div class="strength-bar-wrap" style="margin-top:6px"><div class="strength-bar" id="reg-strength-bar"></div></div>
+          <div class="strength-bar-wrap mt-6"><div class="strength-bar" id="reg-strength-bar"></div></div>
           <div class="strength-info"><span class="strength-label" id="reg-strength-label"></span></div>
         </div>
         <div class="form-group">
           <label class="form-label" for="reg-confirm">Confirm Password</label>
           <input class="form-input" id="reg-confirm" type="password" placeholder="Repeat password" required autocomplete="new-password" />
         </div>
-        <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:16px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <input type="checkbox" id="enable-recovery" style="width:18px;height:18px;cursor:pointer" />
-            <label for="enable-recovery" style="cursor:pointer;font-size:0.95rem;margin:0">🛟 Set up account recovery (optional)</label>
+        <div class="recovery-section">
+          <div class="recovery-toggle-row">
+            <input type="checkbox" id="enable-recovery" class="recovery-checkbox" />
+            <label for="enable-recovery" class="recovery-toggle-label">Set up account recovery <span class="text-muted">(optional)</span></label>
           </div>
-          <div id="recovery-setup" style="display:none;gap:12px;flex-direction:column">
-            <p style="color:var(--text-secondary);font-size:0.85rem;margin:0">
-              Create a recovery phrase to regain access if you forget your master password. Write it down somewhere safe!
-            </p>
+          <div id="recovery-setup" class="recovery-fields is-hidden">
+            <p class="recovery-hint-text">Create a recovery phrase to regain access if you forget your master password. Keep it somewhere safe.</p>
             <div class="form-group">
               <label class="form-label" for="reg-recovery-phrase">Recovery Phrase</label>
-              <input class="form-input" id="reg-recovery-phrase" type="text" placeholder="e.g., MyDog2020BlueSky (mix letters, numbers, symbols)" autocomplete="off" />
-              <small style="color:var(--text-secondary);display:block;margin-top:6px">Min 12 characters • Mix letters, numbers, symbols for security</small>
+              <input class="form-input" id="reg-recovery-phrase" type="text" placeholder="Min 12 chars — mix letters, numbers, symbols" autocomplete="off" />
+              <small class="field-hint">Min 12 characters · Mix letters, numbers, symbols</small>
             </div>
             <div class="form-group">
-              <label class="form-label" for="reg-recovery-hint">Recovery Hint (optional)</label>
-              <input class="form-input" id="reg-recovery-hint" type="text" placeholder="e.g., My favorite dog's name and favorite color" autocomplete="off" />
-              <small style="color:var(--text-secondary);display:block;margin-top:6px">A hint to help you remember your recovery phrase</small>
+              <label class="form-label" for="reg-recovery-hint">Recovery Hint <span class="text-muted">(optional)</span></label>
+              <input class="form-input" id="reg-recovery-hint" type="text" placeholder="e.g. My pet's name and favorite color" autocomplete="off" />
+              <small class="field-hint">A hint to help you remember — never the phrase itself</small>
             </div>
           </div>
         </div>
-        <button class="btn btn-primary" type="submit" id="reg-btn" style="width:100%;justify-content:center;padding:12px;margin-top:16px">
-          Create Account
-        </button>
+        <button class="btn btn-primary btn-full mt-4" type="submit" id="reg-btn">Create Account</button>
         <div class="auth-footer">
           By registering you agree to store an encrypted vault on our servers.<br/>
           We <strong>cannot</strong> recover your master password.
@@ -178,26 +173,24 @@
      ══════════════════════════════════════════════════════════════════════════ -->
 <div id="master-screen">
   <div class="master-card">
-    <span class="master-icon">🗝️</span>
+    <span class="master-icon"><i class="ph-fill ph-lock-key"></i></span>
     <h2 class="master-title">Enter Master Password</h2>
     <p class="master-sub">
       This password is <em>never</em> sent to the server.<br/>
       It derives your encryption key locally to unlock your vault.
     </p>
-    <form id="master-form" onsubmit="handleMasterPassword(event)" style="display:flex;flex-direction:column;gap:16px">
+    <form id="master-form" onsubmit="handleMasterPassword(event)" class="form-stack-16">
       <div class="form-group">
         <label class="form-label" for="master-input">Master Password</label>
         <div class="input-wrap">
           <input class="form-input" id="master-input" type="password" placeholder="Enter your master password…" required autofocus />
           <div class="input-actions">
-            <button type="button" class="btn-icon toggle-pw" data-target="master-input">👁</button>
+            <button type="button" class="btn-icon toggle-pw" data-target="master-input"><i class="ph ph-eye"></i></button>
           </div>
         </div>
       </div>
-      <div id="master-error" style="display:none;color:var(--red);font-size:0.85rem;text-align:center"></div>
-      <button class="btn btn-primary" type="submit" id="master-btn" style="width:100%;justify-content:center;padding:13px;font-size:1rem">
-        🔓 Unlock Vault
-      </button>
+      <div id="master-error" class="master-error is-hidden"></div>
+      <button class="btn btn-primary btn-full" type="submit" id="master-btn">Unlock Vault</button>
     </form>
   </div>
 </div>
@@ -256,28 +249,30 @@
   function showAlert(msg, type = 'error') {
     const el = document.getElementById('auth-alert');
     el.style.display = 'block';
-    el.style.background = type === 'error' ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)';
-    el.style.border = `1px solid ${type === 'error' ? 'rgba(239,68,68,0.4)' : 'rgba(16,185,129,0.4)'}`;
+    el.style.background = type === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)';
+    el.style.borderColor = type === 'error' ? 'rgba(239,68,68,0.35)' : 'rgba(16,185,129,0.35)';
     el.style.color = type === 'error' ? 'var(--red)' : 'var(--green)';
     el.textContent = msg;
   }
-  function hideAlert() { document.getElementById('auth-alert').style.display = 'none'; }
+  function hideAlert() {
+    const el = document.getElementById('auth-alert');
+    el.style.display = 'none';
+    el.style.background = el.style.borderColor = el.style.color = '';
+  }
 
   // ── Toggle password visibility ────────────────────────────────────────────
   document.querySelectorAll('.toggle-pw').forEach(btn => {
     btn.addEventListener('click', () => {
       const t = document.getElementById(btn.dataset.target);
-      if (t) { t.type = t.type === 'password' ? 'text' : 'password'; btn.textContent = t.type === 'password' ? '👁' : '🙈'; }
+      if (t) { t.type = t.type === 'password' ? 'text' : 'password'; btn.innerHTML = t.type === 'password' ? '<i class="ph ph-eye"></i>' : '<i class="ph ph-eye-slash"></i>'; }
     });
   });
 
   // ── Recovery setup toggle ─────────────────────────────────────────────────
   document.getElementById('enable-recovery')?.addEventListener('change', (e) => {
     const recoverySetup = document.getElementById('recovery-setup');
-    if (e.target.checked) {
-      recoverySetup.style.display = 'flex';
-    } else {
-      recoverySetup.style.display = 'none';
+    recoverySetup.classList.toggle('is-hidden', !e.target.checked);
+    if (!e.target.checked) {
       document.getElementById('reg-recovery-phrase').value = '';
       document.getElementById('reg-recovery-hint').value = '';
     }
@@ -394,7 +389,7 @@
     const btn = document.getElementById('login-btn');
     btn.disabled = true; btn.textContent = 'Signing in…';
     hideAlert();
-    document.getElementById('signin-forgot-wrap').style.display = 'none';
+    document.getElementById('signin-forgot-wrap').classList.add('is-hidden');
     const { ok, status, data } = await Auth.login(email, password, mfaToken);
     btn.disabled = false; btn.textContent = 'Sign In';
     if (data.success) {
@@ -404,7 +399,7 @@
       showAlert('Enter your 6-digit authenticator code', 'success');
     } else {
       showAlert(data.message || 'Login failed');
-      document.getElementById('signin-forgot-wrap').style.display = 'block';
+      document.getElementById('signin-forgot-wrap').classList.remove('is-hidden');
     }
   }
 
@@ -428,7 +423,8 @@
     if (success) {
       window.location.href = '/vault.html';
     } else {
-      errEl.style.display = 'block';
+      const errEl = document.getElementById('master-error');
+      errEl.classList.remove('is-hidden');
       errEl.textContent = 'Wrong master password or vault corrupted.';
     }
   }

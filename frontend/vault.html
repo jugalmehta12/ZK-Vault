@@ -9,21 +9,22 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="ZKVault" />
   <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%238b5cf6' width='180' height='180'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='white' font-family='system-ui'>🔐</text></svg>" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%238b5cf6' width='100' height='100'/><text x='50' y='50' dominant-baseline='middle' text-anchor='middle' font-size='60' fill='white'>🔐</text></svg>" />
+  <link rel="apple-touch-icon" href="/icons/vault-svgrepo-com.svg" />
+  <link rel="icon" type="image/svg+xml" href="/icons/vault-svgrepo-com.svg" />
   <title>ZK Vault — Dashboard</title>
   <link rel="stylesheet" href="/css/style.css" />
+  <script src="/js/icons.js"></script>
 </head>
-<body>
+<body data-theme="light">
 
 <div class="vault-layout">
 
   <!-- ── TOP BAR ─────────────────────────────────────────────────────────── -->
   <header class="topbar">
     <div class="topbar-left">
-      <button class="btn-icon" id="sidebar-toggle" title="Toggle sidebar">☰</button>
+      <button class="btn-icon" id="sidebar-toggle" title="Toggle sidebar"><i class="ph ph-list"></i></button>
       <div class="topbar-logo">
-        <div class="topbar-logo-icon">🔐</div>
+        <div class="topbar-logo-icon"><i class="ph-fill ph-lock-key"></i></div>
         <span class="logo-text">ZKVault</span>
       </div>
     </div>
@@ -43,13 +44,16 @@
       </div>
 
       <!-- Share Inbox -->
-      <button class="btn-icon" id="inbox-btn" title="Shared Passwords">📥</button>
+      <button class="btn-icon" id="inbox-btn" title="Shared Passwords"><i class="ph ph-tray"></i></button>
 
       <!-- Health Dashboard -->
-      <button class="btn-icon" id="health-btn" title="Password Health Dashboard">🩺</button>
+      <button class="btn-icon" id="health-btn" title="Password Health Dashboard"><i class="ph ph-heartbeat"></i></button>
+
+      <!-- Theme Toggle -->
+      <button class="btn-icon" id="theme-toggle-btn" title="Toggle light / dark theme">🌗</button>
 
       <!-- Settings -->
-      <button class="btn-icon" id="settings-btn" title="Settings &amp; MFA">⚙️</button>
+      <button class="btn-icon" id="settings-btn" title="Settings &amp; MFA"><i class="ph ph-gear"></i></button>
 
       <!-- Logout -->
       <button class="btn btn-secondary btn-logout-compact" id="logout-btn">
@@ -65,7 +69,7 @@
         <button class="btn btn-primary btn-grow-center" id="add-btn" title="Add entry">
           + New Entry
         </button>
-        <button class="btn btn-secondary btn-icon" id="gen-btn" title="Password generator">🎲</button>
+        <button class="btn btn-secondary btn-icon" id="gen-btn" title="Password generator"><i class="ph ph-dice-five"></i></button>
       </div>
       <div class="search-wrap">
         <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3a6 6 0 100 12A6 6 0 009 3zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd"/></svg>
@@ -73,25 +77,25 @@
       </div>
       <div class="sidebar-menu" id="sidebar-menu">
         <button class="menu-chip active" type="button" data-filter="all">
-          <span class="menu-chip-left"><span class="menu-chip-icon">🗂</span><span class="menu-chip-label">All Entries</span></span>
+          <span class="menu-chip-left"><span class="menu-chip-icon"><i class="ph ph-folders"></i></span><span class="menu-chip-label">All Entries</span></span>
         </button>
         <button class="menu-chip" type="button" data-filter="recent">
-          <span class="menu-chip-left"><span class="menu-chip-icon">🕒</span><span class="menu-chip-label">Recent</span></span>
+          <span class="menu-chip-left"><span class="menu-chip-icon"><i class="ph ph-clock-counter-clockwise"></i></span><span class="menu-chip-label">Recent</span></span>
         </button>
         <button class="menu-chip" type="button" data-filter="breached">
-          <span class="menu-chip-left"><span class="menu-chip-icon">⚠</span><span class="menu-chip-label">Breached</span></span>
+          <span class="menu-chip-left"><span class="menu-chip-icon"><i class="ph ph-warning-circle"></i></span><span class="menu-chip-label">Breached</span></span>
         </button>
         <button class="menu-chip" type="button" data-filter="weak">
-          <span class="menu-chip-left"><span class="menu-chip-icon">🔓</span><span class="menu-chip-label">Weak</span></span>
+          <span class="menu-chip-left"><span class="menu-chip-icon"><i class="ph ph-lock-open"></i></span><span class="menu-chip-label">Weak</span></span>
         </button>
       </div>
 
       <!-- Quick Actions Strip -->
       <div class="quick-actions-strip">
         <button class="btn btn-primary" id="quick-add-entry" type="button">+ Add Entry</button>
-        <button class="btn btn-secondary" id="quick-open-generator" type="button">🎲 Generator</button>
-        <button class="btn btn-secondary" id="quick-health-check" type="button">🩺 Health</button>
-        <button class="btn btn-secondary" id="quick-recent-activity" type="button">🧾 Activity</button>
+        <button class="btn btn-secondary" id="quick-open-generator" type="button"><i class="ph ph-dice-five"></i> Generator</button>
+        <button class="btn btn-secondary" id="quick-health-check" type="button"><i class="ph ph-heartbeat"></i> Health</button>
+        <button class="btn btn-secondary" id="quick-recent-activity" type="button"><i class="ph ph-receipt"></i> Activity</button>
       </div>
 
       <!-- At-a-Glance Cards -->
@@ -122,8 +126,8 @@
     <div id="unlock-modal" class="modal is-hidden">
       <div class="modal-box" style="max-width:420px">
         <div class="modal-header">
-          <span class="modal-title">🔐 Unlock Vault</span>
-          <button type="button" class="btn-icon" id="unlock-modal-close">✕</button>
+          <span class="modal-title"><i class="ph-fill ph-lock-key"></i> Unlock Vault</span>
+          <button type="button" class="btn-icon" id="unlock-modal-close"><i class="ph ph-x"></i></button>
         </div>
         <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
           <p style="color:var(--text-secondary);font-size:0.95rem;margin:0">Enter your master password to decrypt the offline vault stored on this device.</p>
@@ -153,22 +157,22 @@
 
       <div class="dashboard-widgets">
         <section class="dashboard-card" id="recent-panel">
-          <div class="dashboard-card-title">🕒 Recent Entries</div>
+          <div class="dashboard-card-title"><i class="ph ph-clock"></i> Recent Entries</div>
           <div id="recent-list" class="dashboard-list"></div>
         </section>
 
         <section class="dashboard-card" id="tip-panel">
-          <div class="dashboard-card-title">💡 Security Tip Of The Day</div>
+          <div class="dashboard-card-title"><i class="ph ph-lightbulb"></i> Security Tip Of The Day</div>
           <p id="security-tip-text" class="dashboard-tip-text">Loading tip…</p>
         </section>
 
         <section class="dashboard-card" id="actions-panel">
-          <div class="dashboard-card-title">✅ Upcoming Actions</div>
+          <div class="dashboard-card-title"><i class="ph ph-check-circle"></i> Upcoming Actions</div>
           <div id="actions-checklist" class="dashboard-checklist"></div>
         </section>
 
         <section class="dashboard-card" id="insights-panel">
-          <div class="dashboard-card-title">📊 Quick Search Insights</div>
+          <div class="dashboard-card-title"><i class="ph ph-chart-bar"></i> Quick Search Insights</div>
           <div id="insights-wrap">
             <div class="insight-line"><span>Most-used category</span><strong id="insight-most-category">—</strong></div>
             <div class="insight-line"><span>Last searched keyword</span><strong id="insight-last-search">None</strong></div>
@@ -178,12 +182,12 @@
         </section>
 
         <section class="dashboard-card" id="timeline-panel">
-          <div class="dashboard-card-title">🧾 Activity Timeline</div>
+          <div class="dashboard-card-title"><i class="ph ph-receipt"></i> Activity Timeline</div>
           <div id="activity-timeline" class="timeline-list"></div>
         </section>
 
         <section class="dashboard-card" id="shortcuts-panel">
-          <div class="dashboard-card-title">⌨ Keyboard Shortcuts</div>
+          <div class="dashboard-card-title"><i class="ph ph-keyboard"></i> Keyboard Shortcuts</div>
           <div class="shortcut-grid">
             <div><kbd>N</kbd><span>New entry</span></div>
             <div><kbd>/</kbd><span>Focus search</span></div>
@@ -202,7 +206,7 @@
         <div class="detail-header-actions">
           <button class="btn btn-secondary" id="detail-close-btn" type="button">Close</button>
           <button class="btn btn-secondary is-hidden mr-8" id="share-entry-btn" type="button">Share</button>
-          <button class="btn btn-danger" id="delete-btn">🗑 Delete</button>
+          <button class="btn btn-danger" id="delete-btn"><i class="ph ph-trash"></i> Delete</button>
         </div>
       </div>
 
@@ -232,7 +236,7 @@
               <div class="input-wrap">
                 <input class="form-input" id="detail-username" type="text" placeholder="username@example.com" />
                 <div class="input-actions">
-                  <button type="button" class="btn-icon copy-btn" data-target="detail-username" title="Copy">📋</button>
+                  <button type="button" class="btn-icon copy-btn" data-target="detail-username" title="Copy"><i class="ph ph-copy"></i></button>
                 </div>
               </div>
             </div>
@@ -241,8 +245,8 @@
               <div class="input-wrap">
                 <input class="form-input" id="detail-password" type="password" placeholder="••••••••" />
                 <div class="input-actions">
-                  <button type="button" class="btn-icon toggle-pw" data-target="detail-password" title="Show/hide">👁</button>
-                  <button type="button" class="btn-icon copy-btn" data-target="detail-password" title="Copy">📋</button>
+                  <button type="button" class="btn-icon toggle-pw" data-target="detail-password" title="Show/hide"><i class="ph ph-eye"></i></button>
+                  <button type="button" class="btn-icon copy-btn" data-target="detail-password" title="Copy"><i class="ph ph-copy"></i></button>
                 </div>
               </div>
               <!-- Strength meter -->
@@ -258,7 +262,7 @@
               <div class="input-wrap">
                 <input class="form-input" id="detail-url" type="url" placeholder="https://example.com" />
                 <div class="input-actions">
-                  <button type="button" class="btn-icon" onclick="openUrl()" title="Open">🔗</button>
+                  <button type="button" class="btn-icon" onclick="openUrl()" title="Open"><i class="ph ph-arrow-square-out"></i></button>
                 </div>
               </div>
             </div>
@@ -272,7 +276,7 @@
 
         <!-- Risk Intelligence Card -->
         <div class="detail-card">
-          <div class="detail-card-title">🔍 Risk Intelligence</div>
+          <div class="detail-card-title"><i class="ph ph-magnifying-glass"></i> Risk Intelligence</div>
           <div id="detail-audit">
             <div class="audit-empty-placeholder">
               Select an entry to see its risk analysis…
@@ -283,10 +287,10 @@
         <!-- Save button -->
         <div class="action-row">
           <button class="btn btn-primary btn-grow-center" type="submit" id="save-btn">
-            💾 Save Changes
+            <i class="ph ph-floppy-disk"></i> Save Changes
           </button>
           <button type="button" class="btn btn-secondary" onclick="document.getElementById('gen-btn').click()">
-            🎲 Generate
+            <i class="ph ph-dice-five"></i> Generate
           </button>
         </div>
       </form>
@@ -596,6 +600,47 @@
 </div>
 
 <div id="toast-container"></div>
+
+<!-- ── RECOVERY CONFIGURE MODAL ──────────────────────────────────────── -->
+<div class="modal is-hidden" id="recovery-modal">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-header">
+      <span class="modal-title">🛟 Configure Recovery Phrase</span>
+      <button class="btn-icon" id="recovery-modal-close">✕</button>
+    </div>
+    <div class="form-stack-16" style="padding:20px">
+      <p class="settings-subtext" style="margin:0">
+        Your recovery phrase lets you reset access if you forget your master password.
+        Store it somewhere safe — <strong>we cannot recover it for you.</strong>
+      </p>
+      <div class="form-group">
+        <label class="form-label" for="recovery-phrase-input">Recovery Phrase <span style="color:var(--red)">*</span></label>
+        <div class="input-wrap">
+          <input class="form-input" id="recovery-phrase-input" type="password"
+            placeholder="Min 12 characters — mix letters, numbers, symbols"
+            autocomplete="new-password" />
+          <div class="input-actions">
+            <button type="button" class="btn-icon toggle-pw" data-target="recovery-phrase-input" title="Show/hide">👁</button>
+          </div>
+        </div>
+        <small class="field-hint">At least 12 characters. The longer and more random, the better.</small>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="recovery-hint-input">Hint <span class="text-muted">(optional)</span></label>
+        <input class="form-input" id="recovery-hint-input" type="text"
+          placeholder="e.g. My college name + birth year"
+          autocomplete="off" />
+        <small class="field-hint">A reminder hint — never include the phrase itself.</small>
+      </div>
+      <div id="recovery-modal-error" class="master-error is-hidden"></div>
+      <div class="action-row" style="margin-top:4px">
+        <button class="btn btn-primary btn-grow-center" id="recovery-modal-submit" type="button">Save Recovery Phrase</button>
+        <button class="btn btn-secondary" id="recovery-modal-cancel" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- Scripts -->
 <script src="/js/crypto.js"></script>

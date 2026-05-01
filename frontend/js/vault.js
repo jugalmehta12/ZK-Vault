@@ -12,6 +12,7 @@ window.VaultStore = (() => {
   let _rsaPrivateKey = null;
 
   function setKey(key) { _key = key; }
+  function getKey() { return _key; }
   function setSalt(salt) { _salt = salt; }
   function setEntries(entries) { _entries = entries; }
   function getEntries() { return [..._entries]; }
@@ -106,7 +107,7 @@ window.VaultStore = (() => {
   }
 
   return {
-    setKey, setSalt, setEntries, getEntries, clear,
+    setKey, getKey, setSalt, setEntries, getEntries, clear,
     addEntry, updateEntry, deleteEntry, getEntry, search,
     saveToServer, setRSAPrivateKey, getRSAPrivateKey
   };

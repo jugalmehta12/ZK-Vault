@@ -21,9 +21,16 @@ function generateSalt() {
 
 /**
  * Convert Uint8Array → Base64 string (for storage / transmission).
+ * BUG-08 FIX: Using a loop instead of spread operator to avoid
+ * "Maximum call stack size exceeded" on large vault blobs.
  */
 function bufferToBase64(buffer) {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
 /**

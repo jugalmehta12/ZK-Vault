@@ -11,6 +11,7 @@ const ShareSchema = new mongoose.Schema(
       type: String,
       required: true,
       lowercase: true,
+      index: true,   // BUG-10 FIX: Index for efficient lookups by receiver
     },
     encryptedPayload: {
       type: String,

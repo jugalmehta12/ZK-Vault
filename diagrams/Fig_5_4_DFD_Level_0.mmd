@@ -1,9 +1,0 @@
-flowchart LR
-    E1[External Entity: User]
-    P0((P0: Password Vault System))
-    D1[(D1: Encrypted Storage)]
-
-    E1 -->|Authentication data and credential actions| P0
-    P0 -->|Encrypted vault records| D1
-    D1 -->|Encrypted vault records| P0
-    P0 -->|Vault view and security insights| E1

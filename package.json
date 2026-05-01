@@ -15,5 +15,8 @@
   "type": "commonjs",
   "devDependencies": {
     "eslint": "^8.57.1"
+  },
+  "dependencies": {
+    "@phosphor-icons/web": "^2.1.2"
   }
 }

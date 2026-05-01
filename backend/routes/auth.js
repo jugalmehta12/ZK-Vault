@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const User = require('../models/User');
@@ -148,8 +149,8 @@ router.post('/mfa/setup', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: 'MFA is already setup.' });
     }
     const secret = speakeasy.generateSecret({ name: `ZKVault (${user.email})` });
-    req.user.mfaSecret = secret.base32;
-    await req.user.save();
+    user.mfaSecret = secret.base32;
+    await user.save();
     await logSecurityEvent(req, 'auth.mfa.setup', { user: req.user._id, email: req.user.email });
 
     const qrDataURL = await QRCode.toDataURL(secret.otpauth_url);
@@ -276,17 +277,26 @@ router.delete('/sessions', protect, async (req, res) => {
 // POST /api/auth/recovery/configure
 router.post('/recovery/configure', protect, async (req, res) => {
   try {
-    const { encryptedMaster, iv, salt, hint = '', recoveryPhrase = '' } = req.body;
-    if (!encryptedMaster || !iv || !salt) {
-      return res.status(400).json({ success: false, message: 'Missing recovery fields.' });
+    const { encryptedMaster = '', iv = '', salt = '', hint = '', recoveryPhrase = '' } = req.body;
+
+    // recoveryPhrase is the primary required field (hashed server-side — BUG-02 fix)
+    // encryptedMaster/iv/salt are legacy fields kept for backward compatibility only
+    if (!recoveryPhrase) {
+      return res.status(400).json({ success: false, message: 'Recovery phrase is required.' });
+    }
+    if (recoveryPhrase.length < 12) {
+      return res.status(400).json({ success: false, message: 'Recovery phrase must be at least 12 characters.' });
     }
 
+    // BUG-02 FIX: Hash the recovery phrase before storing — never store plaintext secrets
+    const hashedPhrase = await bcrypt.hash(recoveryPhrase, 12);
+
     await User.findByIdAndUpdate(req.user._id, {
-      recoveryEncryptedMaster: encryptedMaster,
+      recoveryEncryptedMaster: encryptedMaster, // legacy field, may be empty string
       recoveryIV: iv,
       recoverySalt: salt,
-      recoveryHint: hint,
-      recoveryPhrase: recoveryPhrase,
+      recoveryHint: hint,          // hint is display-only (e.g. "My pet's name")
+      recoveryPhrase: hashedPhrase, // phrase is stored as bcrypt hash
     });
 
     await logSecurityEvent(req, 'auth.recovery.configured', { user: req.user._id, email: req.user.email });
@@ -299,10 +309,13 @@ router.post('/recovery/configure', protect, async (req, res) => {
 // GET /api/auth/recovery/status
 router.get('/recovery/status', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('recoveryEncryptedMaster recoveryHint');
+    // Select both fields: recoveryPhrase is the primary enabled flag (BUG-02 fix),
+    // recoveryEncryptedMaster kept for legacy compatibility
+    const user = await User.findById(req.user._id).select('recoveryPhrase recoveryEncryptedMaster recoveryHint');
+    const enabled = Boolean(user?.recoveryPhrase) || Boolean(user?.recoveryEncryptedMaster);
     res.status(200).json({
       success: true,
-      enabled: Boolean(user?.recoveryEncryptedMaster),
+      enabled,
       hint: user?.recoveryHint || '',
     });
   } catch (err) {
@@ -358,25 +371,25 @@ router.post('/recovery/reset', loginLimiter, async (req, res) => {
     }
 
     // Check if recovery is configured
-    if (!user.recoveryEncryptedMaster) {
+    if (!user.recoveryEncryptedMaster || !user.recoveryPhrase) {
       await logSecurityEvent(req, 'auth.recovery.reset_failed', { email, reason: 'recovery_not_configured' });
       return res.status(400).json({ success: false, message: 'Recovery is not configured for this account. Please contact support.' });
     }
 
-    // Verify recovery phrase (simple string comparison - in production, use hashing)
-    const storedPhrase = user.recoveryHint || '';
-    if (recoveryPhrase !== storedPhrase && recoveryPhrase !== user.recoveryPhrase) {
+    // BUG-02 & BUG-03 FIX:
+    //   - Only compare against the stored hashed phrase (never the hint)
+    //   - Use bcrypt.compare for constant-time comparison against the hash
+    const phraseValid = await bcrypt.compare(recoveryPhrase, user.recoveryPhrase);
+    if (!phraseValid) {
       await logSecurityEvent(req, 'auth.recovery.reset_failed', { email, reason: 'invalid_phrase' });
       return res.status(401).json({ success: false, message: 'Invalid recovery phrase.' });
     }
 
-    // Hash new password
-    const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // Hash new password using consistent salt rounds (12, matching User model pre-save hook)
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-    // Update user password
-    user.passwordHash = hashedPassword;
-    await user.save();
+    // Update user password directly (bypass pre-save hook to avoid double-hashing)
+    await User.findByIdAndUpdate(user._id, { passwordHash: hashedPassword });
 
     await logSecurityEvent(req, 'auth.recovery.reset_success', { email, userId: user._id });
     res.status(200).json({ success: true, message: 'Master password has been reset successfully. You can now log in.' });

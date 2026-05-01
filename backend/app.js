@@ -51,7 +51,10 @@ function createApp() {
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
 
-  // Express 5 makes req.query read-only; sanitize request body manually.
+    // Note (Q-06): 'express-mongo-sanitize' is listed in package.json but is NOT used here.
+    // Manual sanitization is done via the sanitizeObj() middleware above (removes $-prefixed keys).
+    // You can safely remove express-mongo-sanitize from package.json by running:
+    //   npm uninstall express-mongo-sanitize
   app.use((req, res, next) => {
     if (req.body) sanitizeObj(req.body);
     next();
@@ -87,6 +90,9 @@ function createApp() {
   });
 
   const frontendPath = path.resolve(__dirname, '..', 'frontend');
+  const iconsPath = path.resolve(__dirname, '..', 'icons');
+
+  app.use('/icons', express.static(iconsPath));
   app.use(express.static(frontendPath));
 
   app.use('/api/auth', authRoutes);

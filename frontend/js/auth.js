@@ -149,15 +149,19 @@ window.Auth = (() => {
       }
 
       if (!encryptedVault) {
-        // First time — generate salt, start with empty vault
+        // First time — generate salt, derive key, start with empty vault
         salt = ZKCrypto.generateSalt();
         VaultStore.setSalt(ZKCrypto.bufferToBase64(salt));
+
+        // BUG-06 FIX: Derive key in the new-vault branch so the key is always set
+        const newKey = await ZKCrypto.deriveKey(masterPassword, salt);
+        VaultStore.setKey(newKey);
       } else {
         // Existing vault
         salt = vaultSalt;
         VaultStore.setSalt(vaultSalt);
 
-        // 2. Derive key locally
+        // BUG-05 FIX: Derive key only once (was called twice — expensive at 310k PBKDF2 iterations)
         const key = await ZKCrypto.deriveKey(masterPassword, salt);
         VaultStore.setKey(key);
 
@@ -166,8 +170,7 @@ window.Auth = (() => {
         entries = JSON.parse(plaintext);
       }
 
-      const finalKey = await ZKCrypto.deriveKey(masterPassword, salt);
-      VaultStore.setKey(finalKey);
+      // Key is already set in VaultStore from the branch above — no second deriveKey call needed
       
       // -- RSA KEYPAIR INIT --
       const rsaPrivBlob = entries.find(e => e.type === '_rsa_private_key_');
@@ -193,8 +196,9 @@ window.Auth = (() => {
         await VaultStore.saveToServer();
       }
       
-      // Persist across navigation
-      sessionStorage.setItem('zk_master', masterPassword);
+      // SEC-03 FIX: Do NOT persist the master password to sessionStorage — it must stay in memory only.
+      // On navigation to vault.html, the salt is available from sessionStorage to re-derive the key
+      // when the user re-enters the master password (or the key is kept in VaultStore memory).
       sessionStorage.setItem('zk_salt', typeof salt === 'string' ? salt : ZKCrypto.bufferToBase64(salt));
       sessionStorage.setItem('zk_vault', JSON.stringify(entries));
       
