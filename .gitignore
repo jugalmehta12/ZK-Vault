@@ -1,1 +1,27 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Environment secrets — NEVER commit these
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Logs
+*.log
+server.log
+server.err
+server.out
+test-api.out
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+*.swp
+
+# Test artifacts
+test-results.json
+puppeteer-screencap.png
+puppet-logs.txt
+.tmp_http_server_pid
