@@ -90,7 +90,7 @@ function createApp() {
   });
 
   const frontendPath = path.resolve(__dirname, '..', 'frontend');
-  const iconsPath = path.resolve(__dirname, '..', 'icons');
+  const iconsPath = path.resolve(__dirname, '..', 'frontend', 'icons');
 
   app.use('/icons', express.static(iconsPath));
   app.use(express.static(frontendPath));
