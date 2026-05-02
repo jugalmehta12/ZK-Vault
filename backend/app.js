@@ -30,6 +30,7 @@ function createApp() {
   const ORIGIN = IS_DEV ? `http://localhost:${PORT}` : (process.env.CLIENT_ORIGIN || `https://localhost:${PORT}`);
 
   const app = express();
+  
 
   app.use(helmet({
     contentSecurityPolicy: {
@@ -90,7 +91,7 @@ function createApp() {
   });
 
   const frontendPath = path.resolve(__dirname, '..', 'frontend');
-  const iconsPath = path.resolve(__dirname, '..', 'frontend', 'icons');
+  const iconsPath = path.resolve(__dirname, '..', 'icons');
 
   app.use('/icons', express.static(iconsPath));
   app.use(express.static(frontendPath));
