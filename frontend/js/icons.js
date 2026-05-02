@@ -8,7 +8,7 @@ window.ZKIcons = (() => {
     `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="${fill ? 0 : 16}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 
   const asset = (file, label = '') =>
-    `<img class="zk-icon-img" src="/icons/${file}" alt="${label}" aria-hidden="true" draggable="false" />`;
+    `<img class="zk-icon-img" src="icons/${file}" alt="${label}" aria-hidden="true" draggable="false" />`;
 
   const assetMap = {
     'app-logo': 'vault-svgrepo-com.svg',
